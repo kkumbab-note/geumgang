@@ -377,8 +377,8 @@
         return '<details class="m" data-name="' + esc(m.name) + '"><summary>' +
           '<div class="m-top"><span class="m-name">' + esc(m.name) + '</span>' + chips + pill + '<span class="chev"></span></div>' +
           strip(m.months) +
-          '<div class="m-amt"><span>낸 돈 <b class="num">' + won(m.paidAmount) + '원</b></span>' +
-          '<span class="owe">안 낸 돈 <b class="num">' + won(m.owedAmount) + '원</b></span></div>' +
+          '<div class="m-amt"><span>납부금액 <b class="num">' + won(m.paidAmount) + '원</b></span>' +
+          '<span class="owe">미납금액 <b class="num">' + won(m.owedAmount) + '원</b></span></div>' +
           '</summary>' + memberDetail(Y, m) + '</details>';
       }).join('');
       return '<section><div class="sec-head"><h2>회원별 납부</h2><span class="sec-sum">' + Y.year + '년</span></div>' +
