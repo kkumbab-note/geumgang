@@ -454,7 +454,7 @@
         '<button class="copy" id="copy" type="button">카톡에 올릴 공지 문구 복사</button>' +
         '<p>계비는 월 ' + won(D.fee) + '원, 매월 30일까지 내요 (계칙 제22조).</p>' +
         '<p>장부는 늦게 낸 돈을 밀린 달부터 채워요. 그래서 낸 날짜가 그 달보다 뒤일 수 있어요.</p>' +
-        '<p>자료: 계장부 ' + Y.year + ' · 통장 거래내역 ' + Y.bank.start.replace(/-/g, '.') + '~' + Y.bank.end.replace(/-/g, '.') + '</p>' +
+        '<p>자료: ' + D.years.map(function (y) { return y.year; }).sort().join('년 / ') + '년 통장 거래내역</p>' +
         '<p>궁금한 점은 총무에게 물어봐 주세요.</p></div>';
     }
 
