@@ -419,8 +419,9 @@
       var chips = '';
       if (m.role) chips += '<span class="chip-mute chip">' + esc(m.role) + ' · 월 ' + (m.fee / 10000) + '만원</span>';
       if (m.annual.length) chips += ' <span class="chip">연납 회원</span>';
-      return '<details class="m' + (m.name === myName ? ' mine' : '') +
-        '" data-name="' + esc(m.name) + '"><summary>' +
+      var isMe = m.name === myName;
+      return '<details class="m' + (isMe ? ' mine' : '') + '"' + (isMe ? ' open' : '') +
+        ' data-name="' + esc(m.name) + '"><summary>' +
         '<div class="m-top"><span class="m-name">' + esc(m.name) + '</span>' + chips + pill + '<span class="chev"></span></div>' +
         strip(m.months) +
         '<div class="m-amt"><span>납부금액 <b class="num">' + won(m.paidAmount) + '원</b></span>' +
