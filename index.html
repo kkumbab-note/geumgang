@@ -105,7 +105,9 @@
   /* 머리글 */
   .eyebrow { margin: 0; font-size: 13px; letter-spacing: .08em; color: var(--accent); font-weight: 600; }
   h1 { font-size: 26px; margin-top: 2px; letter-spacing: -.01em; }
-  .sub { margin: 6px 0 0; color: var(--muted); font-size: 14px; white-space: pre-line; }
+  .sub { margin: 6px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 14px; }
+  .sub li { padding-left: 13px; text-indent: -13px; }
+  .sub li::before { content: '· '; }
 
   .years { display: flex; gap: 6px; margin-top: 14px; }
   .years button { font: inherit; font-size: 14.5px; font-weight: 600; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 6px 15px; cursor: pointer; }
@@ -265,7 +267,7 @@
   <header>
     <p class="eyebrow" id="eyebrow"></p>
     <h1>계비 현황</h1>
-    <p class="sub" id="sub"></p>
+    <ul class="sub" id="sub"></ul>
   </header>
   <nav class="years" id="years" aria-label="연도 선택" hidden></nav>
   <main id="app"></main>
@@ -327,13 +329,13 @@
     function staleDays(Y) {                // 통장 자료가 며칠 뒤처졌나
       return isThisYear(Y) ? daysBetween(Y.bank.end, D.asOf) : 0;
     }
-    function freshnessText(Y) {       // 한 줄에 하나씩 (.sub의 white-space: pre-line)
+    function freshnessLines(Y) {      // 머리말에 한 줄에 하나씩 찍는다
       var lines = isThisYear(Y)
         ? ['통장 내역 ' + dayText(Y.bank.end, true) + '까지 반영']
         : [Y.year + '년 통장 내역 ' + dayText(Y.bank.end) + '까지'];
       lines.push('마지막 거래 ' + dayText(Y.bank.lastTxn));
       if (isThisYear(Y) && D.builtAt) { lines.push('화면 갱신 ' + dayText(D.builtAt)); }
-      return lines.join('\n');
+      return lines;
     }
 
     /* ---------- 잔액 ---------- */
@@ -621,7 +623,13 @@
     function draw() {
       var Y = byYear[curYear];
       curYear = Y.year;
-      document.getElementById('sub').textContent = freshnessText(Y);
+      var sub = document.getElementById('sub');
+      sub.innerHTML = '';
+      freshnessLines(Y).forEach(function (t) {
+        var li = document.createElement('li');
+        li.textContent = t;
+        sub.appendChild(li);
+      });
       app.innerHTML = fundHtml(Y) + unpaidHtml(Y) + membersHtml(Y) + expensesHtml(Y) +
         settlementHtml(Y) + footHtml(Y);
       Array.prototype.forEach.call(tabs.children, function (b) {
