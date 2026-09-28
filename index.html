@@ -333,7 +333,6 @@
       var lines = isThisYear(Y)
         ? ['통장 내역 ' + dayText(Y.bank.end, true) + '까지 반영']
         : [Y.year + '년 통장 내역 ' + dayText(Y.bank.end) + '까지'];
-      lines.push('마지막 거래 ' + dayText(Y.bank.lastTxn));
       if (isThisYear(Y) && D.builtAt) { lines.push('화면 갱신 ' + dayText(D.builtAt)); }
       return lines;
     }
