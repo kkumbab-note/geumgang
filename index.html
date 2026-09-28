@@ -121,9 +121,12 @@
   .lock-remember { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 14px; }
   .lock-btn { font: inherit; font-size: 16px; font-weight: 600; color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 11px; padding: 12px; cursor: pointer; }
   .lock-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .lock-pw { position: relative; display: flex; }
-  .lock-pw .lock-input { flex: 1; min-width: 0; padding-right: 68px; }
-  .lock-eye { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); background: none; border: 0; border-radius: 8px; padding: 9px 11px; cursor: pointer; }
+  .lock > * { min-width: 0; }                     /* 좁은 화면에서 칸이 카드를 밀어내지 않게 */
+  .lock-pw { display: flex; align-items: center; max-width: 100%; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-2); }
+  .lock-pw:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .lock-pw .lock-input { flex: 1 1 0; width: 100%; min-width: 0; box-sizing: border-box; border: 0; background: none; }
+  .lock-pw .lock-input:focus-visible { outline: none; }
+  .lock-eye { flex: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); background: none; border: 0; border-radius: 8px; padding: 10px 12px; cursor: pointer; }
   .lock-eye:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .lock-btn[disabled] { opacity: .6; cursor: progress; }
   .lock-error { margin: 0; color: var(--over); font-size: 14px; }
@@ -270,7 +273,7 @@
     <p class="lock-title">모임 비밀번호를 넣어 주세요</p>
     <p class="lock-sub">금강과학부 계원만 보는 내용이에요. 단톡방에 올린 비밀번호를 넣으면 돼요.</p>
     <div class="lock-pw">
-      <input class="lock-input" id="pw" type="password" autocomplete="current-password" inputmode="text" placeholder="비밀번호" aria-label="모임 비밀번호">
+      <input class="lock-input" id="pw" type="password" size="8" autocomplete="current-password" inputmode="text" placeholder="비밀번호" aria-label="모임 비밀번호">
       <button class="lock-eye" id="pweye" type="button" aria-pressed="false" aria-label="비밀번호 보기">보기</button>
     </div>
     <label class="lock-remember"><input type="checkbox" id="remember" checked> 이 기기에서 기억하기 (공용 PC면 꺼 주세요)</label>
