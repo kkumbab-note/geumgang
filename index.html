@@ -105,7 +105,7 @@
   /* 머리글 */
   .eyebrow { margin: 0; font-size: 13px; letter-spacing: .08em; color: var(--accent); font-weight: 600; }
   h1 { font-size: 26px; margin-top: 2px; letter-spacing: -.01em; }
-  .sub { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+  .sub { margin: 6px 0 0; color: var(--muted); font-size: 14px; white-space: pre-line; }
 
   .years { display: flex; gap: 6px; margin-top: 14px; }
   .years button { font: inherit; font-size: 14.5px; font-weight: 600; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 6px 15px; cursor: pointer; }
@@ -327,12 +327,13 @@
     function staleDays(Y) {                // 통장 자료가 며칠 뒤처졌나
       return isThisYear(Y) ? daysBetween(Y.bank.end, D.asOf) : 0;
     }
-    function freshnessText(Y) {
-      if (!isThisYear(Y)) {
-        return Y.year + '년 통장 내역 ' + dayText(Y.bank.end) + '까지 · 마지막 거래 ' + dayText(Y.bank.lastTxn);
-      }
-      return '통장 내역 ' + dayText(Y.bank.end, true) + '까지 반영 · 마지막 거래 ' + dayText(Y.bank.lastTxn) +
-        (D.builtAt ? ' · 화면 갱신 ' + dayText(D.builtAt) : '');
+    function freshnessText(Y) {       // 한 줄에 하나씩 (.sub의 white-space: pre-line)
+      var lines = isThisYear(Y)
+        ? ['통장 내역 ' + dayText(Y.bank.end, true) + '까지 반영']
+        : [Y.year + '년 통장 내역 ' + dayText(Y.bank.end) + '까지'];
+      lines.push('마지막 거래 ' + dayText(Y.bank.lastTxn));
+      if (isThisYear(Y) && D.builtAt) { lines.push('화면 갱신 ' + dayText(D.builtAt)); }
+      return lines.join('\n');
     }
 
     /* ---------- 잔액 ---------- */
