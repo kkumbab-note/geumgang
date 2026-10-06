@@ -113,8 +113,11 @@
   .years button { font: inherit; font-size: 14.5px; font-weight: 600; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 6px 15px; cursor: pointer; }
   .years button[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .years button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .years .jump { margin-left: auto; background: none; border: 0; color: var(--accent); padding: 6px 2px; }
-  #settle { scroll-margin-top: 14px; }
+  /* 화면 탭: 현황 / 지출·정산 / 계칙. 내려가도 위에 붙어 있다 */
+  .views { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: repeat(var(--tabs, 3), 1fr); margin: 12px -16px 0; padding: 0 16px; background: var(--ground); border-bottom: 1px solid var(--line); }
+  .views button { font: inherit; font-size: 15.5px; font-weight: 600; color: var(--muted); background: none; border: 0; border-bottom: 2.5px solid transparent; padding: 12px 4px 10px; cursor: pointer; }
+  .views button[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .views button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 6px; }
   .lock { margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px 18px; box-shadow: var(--shadow); display: grid; gap: 10px; }
   .lock-title { margin: 0; font-family: var(--display); font-size: 19px; font-weight: 700; }
   .lock-sub { margin: 0 0 4px; color: var(--muted); font-size: 14px; }
@@ -262,7 +265,7 @@
   .changes li { margin-left: 16px; }
 
   /* 계칙 */
-  #rules, .art { scroll-margin-top: 14px; }
+  #rules, .art { scroll-margin-top: 62px; }      /* 위에 붙은 탭 줄에 가리지 않게 */
   .r-meta { margin: -4px 0 10px; color: var(--muted); font-size: 13px; }
   .r-key { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 2px 15px 12px; }
   .r-key-title { margin: 12px 0 0; color: var(--accent); font-size: 12.5px; font-weight: 600; letter-spacing: .04em; }
@@ -286,7 +289,6 @@
   .r-notes { margin: 12px 2px 0; color: var(--muted); }
   .r-notes p, .r-notes li { font-size: 12.5px; color: var(--muted); }
   .r-notes ul { margin: 0; padding-left: 16px; }
-  .years .jump + .jump { margin-left: 12px; }
   .r-fold > summary { list-style: none; display: flex; align-items: center; gap: 4px; padding: 8px 0; cursor: pointer; color: var(--accent); font-size: 14px; font-weight: 600; }
   .r-fold > summary::-webkit-details-marker { display: none; }
   .r-fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
@@ -303,6 +305,7 @@
     <h1>계비 현황</h1>
     <ul class="sub" id="sub"></ul>
   </header>
+  <nav class="views" id="views" aria-label="화면 선택" hidden></nav>
   <nav class="years" id="years" aria-label="연도 선택" hidden></nav>
   <main id="app"></main>
   <form class="lock" id="lock" hidden>
@@ -732,6 +735,32 @@
 
     /* ---------- 그리기 ---------- */
     var app = document.getElementById('app'), tabs = document.getElementById('years');
+    var views = document.getElementById('views');
+    var VIEWS = [['home', '현황'], ['money', '지출·정산'], ['rules', '계칙']];
+    var curView = 'home';
+
+    function viewFromHash() {                   // 주소 끝 #money, #rules 로 탭을 고른다 (뒤로 가기·카톡 링크)
+      var h = location.hash.slice(1);
+      return h === 'money' || (h === 'rules' && D.rules) ? h : 'home';
+    }
+    function showView(v, push) {
+      curView = v;
+      Array.prototype.forEach.call(app.querySelectorAll('[data-view]'), function (box) {
+        box.hidden = box.dataset.view !== v;
+      });
+      Array.prototype.forEach.call(views.children, function (b) {
+        if (b.dataset.view === v) { b.setAttribute('aria-current', 'page'); } else { b.removeAttribute('aria-current'); }
+      });
+      tabs.hidden = v === 'rules' || D.years.length < 2;   // 계칙은 해마다 같으니 연도 단추가 필요 없다
+      if (push) {
+        history.pushState(null, '', location.pathname + location.search + (v === 'home' ? '' : '#' + v));
+      }
+    }
+    function keepTabsOnTop() {                  // 탭을 바꾸면 새 화면이 처음부터 보이게, 탭 줄 바로 아래로 올린다
+      var top = document.querySelector('header').getBoundingClientRect().bottom + window.scrollY +
+        parseFloat(getComputedStyle(views).marginTop);
+      if (window.scrollY > top) { window.scrollTo(0, top); }
+    }
 
     function draw() {
       var Y = byYear[curYear];
@@ -743,8 +772,11 @@
         li.textContent = t;
         sub.appendChild(li);
       });
-      app.innerHTML = fundHtml(Y) + unpaidHtml(Y) + membersHtml(Y) + expensesHtml(Y) +
-        settlementHtml(Y) + rulesHtml() + footHtml(Y);
+      app.innerHTML =                              // 탭마다 묶어 그리고, 지금 탭만 보여준다
+        '<div data-view="home">' + fundHtml(Y) + unpaidHtml(Y) + membersHtml(Y) + footHtml(Y) + '</div>' +
+        '<div data-view="money">' + expensesHtml(Y) + settlementHtml(Y) + '</div>' +
+        (D.rules ? '<div data-view="rules">' + rulesHtml() + '</div>' : '');
+      showView(curView);
       Array.prototype.forEach.call(tabs.children, function (b) {
         b.setAttribute('aria-current', String(Number(b.dataset.year) === curYear));
       });
@@ -796,20 +828,32 @@
       D.years.forEach(function (y) { byYear[y.year] = y; });
       curYear = D.defaultYear;
       document.getElementById('eyebrow').textContent = D.club;
-      tabs.hidden = false;
-      tabs.innerHTML = (D.years.length > 1
-        ? D.years.slice().sort(function (x, y) { return y.year - x.year; }).map(function (y) {
-          return '<button type="button" data-year="' + y.year + '">' + y.year + '년</button>';
-        }).join('')
-        : '') + '<button type="button" class="jump" data-jump="settle">정산 보기 ↓</button>' +
-        (D.rules ? '<button type="button" class="jump" data-jump="rules">계칙 ↓</button>' : '');
+      tabs.innerHTML = D.years.slice().sort(function (x, y) { return y.year - x.year; }).map(function (y) {
+        return '<button type="button" data-year="' + y.year + '">' + y.year + '년</button>';
+      }).join('');
+      var list = VIEWS.filter(function (v) { return v[0] !== 'rules' || D.rules; });
+      views.style.setProperty('--tabs', list.length);
+      views.innerHTML = list.map(function (v) {
+        return '<button type="button" data-view="' + v[0] + '">' + v[1] + '</button>';
+      }).join('');
+      views.hidden = false;
+      curView = viewFromHash();
+      views.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-view]');
+        if (!b || b.dataset.view === curView) { return; }
+        showView(b.dataset.view, true);
+        keepTabsOnTop();
+      });
+      window.addEventListener('popstate', function () { showView(viewFromHash()); });   // 뒤로 가기
       app.addEventListener('click', function (e) {   // 맨 아래 '계칙 제22조' 같은 바로가기
         var link = e.target.closest('[data-jump]');
-        if (link) { jumpTo(link.dataset.jump); }
+        if (!link) { return; }
+        var target = document.getElementById(link.dataset.jump);
+        var box = target && target.closest('[data-view]');
+        if (box && box.dataset.view !== curView) { showView(box.dataset.view, true); }
+        jumpTo(link.dataset.jump);
       });
       tabs.addEventListener('click', function (e) {
-        var jump = e.target.closest('[data-jump]');
-        if (jump) { jumpTo(jump.dataset.jump); return; }
         var b = e.target.closest('button[data-year]');
         if (!b) return;
         curYear = Number(b.dataset.year);
