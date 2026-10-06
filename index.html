@@ -287,6 +287,13 @@
   .r-notes p, .r-notes li { font-size: 12.5px; color: var(--muted); }
   .r-notes ul { margin: 0; padding-left: 16px; }
   .years .jump + .jump { margin-left: 12px; }
+  .r-fold > summary { list-style: none; display: flex; align-items: center; gap: 4px; padding: 8px 0; cursor: pointer; color: var(--accent); font-size: 14px; font-weight: 600; }
+  .r-fold > summary::-webkit-details-marker { display: none; }
+  .r-fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  .r-fold > summary .chev { border-color: var(--accent); }
+  .r-fold[open] > summary .chev { transform: rotate(225deg); margin-top: 2px; }
+  .r-fold .r-fold-close, .r-fold[open] .r-fold-open { display: none; }
+  .r-fold[open] .r-fold-close { display: inline; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style></head><body>
 
@@ -641,17 +648,22 @@
           rest.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div></li>';
       }).join('') + '</ol>';
     }
-    function ruleBlocks(blocks) {
+    function ruleBlocks(blocks, foldTables) {
       return blocks.map(function (b) {
         if (b.t === 'p') { return '<p>' + esc(b.text) + '</p>'; }
         if (b.t === 'ol' || b.t === 'ul') { return ruleList(b.t, b.items); }
+        if (b.t === 'table' && foldTables) {     // '자주 보는 조항'에서는 긴 표(상조 표)를 접어 둔다
+          return '<details class="r-fold"><summary><span class="r-fold-open">표 펼쳐 보기 (' + b.rows.length +
+            '개 항목)</span><span class="r-fold-close">표 접기</span><span class="chev"></span></summary>' +
+            ruleTable(b) + '</details>';
+        }
         if (b.t === 'table') { return ruleTable(b); }
         return '';
       }).join('');
     }
     function articleHtml(a, anchor) {
       return '<div class="art"' + (anchor && a.no ? ' id="art-' + a.no + '"' : '') + '><h3>' + esc(a.head) + '</h3>' +
-        ruleBlocks(a.blocks) + '</div>';
+        ruleBlocks(a.blocks, anchor) + '</div>';
     }
     function rulesHtml() {
       var R = D.rules;
